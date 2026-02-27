@@ -1,88 +1,79 @@
 import Image from "next/image";
+import Link from "next/link";
 
-interface CardProps {
-  /** Product image path from /public */
-  image: string;
-  /** Product name */
+export type BadgeTone = "red" | "green" | "orange";
+
+export interface CardProps {
   title: string;
-  /** Short product description */
   description?: string;
-  /** Price in dollars */
-  price: number;
-  /** Category label, e.g. "Men's Shoes" */
-  category?: string;
-  /** Optional badge text, e.g. "Best Seller" */
-  badge?: string;
-  /** Badge color variant */
-  badgeColor?: "red" | "green" | "orange";
-  /** Number of color options available */
-  colorCount?: number;
+  subtitle?: string;
+  meta?: string | string[];
+  imageSrc: string;
+  imageAlt?: string;
+  price?: string | number;
+  href?: string;
+  badge?: { label: string; tone?: BadgeTone };
+  className?: string;
 }
 
+const toneToBg: Record<BadgeTone, string> = {
+  red: "text-[--color-red]",
+  green: "text-[--color-green]",
+  orange: "text-[--color-orange]",
+};
+
 export default function Card({
-  image,
   title,
   description,
+  subtitle,
+  meta,
+  imageSrc,
+  imageAlt = title,
   price,
-  category,
+  href,
   badge,
-  badgeColor = "red",
-  colorCount,
+  className = "",
 }: CardProps) {
-  const badgeColorMap: Record<string, string> = {
-    red: "text-red",
-    green: "text-green",
-    orange: "text-orange",
-  };
-
-  return (
-    <div className="group flex w-full flex-col">
-      {/* Image container */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-light-200">
+  const displayPrice =
+    price === undefined ? undefined : typeof price === "number" ? `$${price.toFixed(2)}` : price;
+  const content = (
+    <article
+      className={`group rounded-xl bg-light-100 ring-1 ring-light-300 transition-colors hover:ring-dark-500 ${className}`}
+    >
+      <div className="relative aspect-square overflow-hidden rounded-t-xl bg-light-200">
         <Image
-          src={image}
-          alt={title}
+          src={imageSrc}
+          alt={imageAlt}
           fill
+          sizes="(min-width: 1280px) 360px, (min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
         />
-        {badge && (
-          <span
-            className={`absolute left-3 top-3 text-caption font-[var(--text-caption--font-weight)] leading-[var(--text-caption--line-height)] ${badgeColorMap[badgeColor]}`}
-          >
-            {badge}
-          </span>
+      </div>
+      <div className="p-4">
+        <div className="mb-1 flex items-baseline justify-between gap-3">
+          <h3 className="text-heading-3 text-dark-900">{title}</h3>
+          {displayPrice && <span className="text-body-medium text-dark-900">{displayPrice}</span>}
+        </div>
+        {description && <p className="text-body text-dark-700">{description}</p>}
+        {subtitle && <p className="text-body text-dark-700">{subtitle}</p>}
+        {meta && (
+          <p className="mt-1 text-caption text-dark-700">
+            {Array.isArray(meta) ? meta.join(" • ") : meta}
+          </p>
         )}
       </div>
+    </article>
+  );
 
-      {/* Details */}
-      <div className="mt-3 flex flex-col gap-1">
-        <h3 className="text-body font-[var(--text-body-medium--font-weight)] leading-[var(--text-body-medium--line-height)] text-dark-900 line-clamp-1">
-          {title}
-        </h3>
-
-        {category && (
-          <p className="text-body leading-[var(--text-body--line-height)] text-dark-700">
-            {category}
-          </p>
-        )}
-
-        {description && (
-          <p className="text-body leading-[var(--text-body--line-height)] text-dark-700 line-clamp-2">
-            {description}
-          </p>
-        )}
-
-        {colorCount !== undefined && colorCount > 0 && (
-          <p className="text-body leading-[var(--text-body--line-height)] text-dark-700">
-            {colorCount} {colorCount === 1 ? "Colour" : "Colours"}
-          </p>
-        )}
-
-        <p className="mt-1 text-body font-[var(--text-body-medium--font-weight)] leading-[var(--text-body-medium--line-height)] text-dark-900">
-          ${price.toFixed(2)}
-        </p>
-      </div>
-    </div>
+  return href ? (
+    <Link
+      href={href}
+      aria-label={title}
+      className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[--color-dark-500]"
+    >
+      {content}
+    </Link>
+  ) : (
+    content
   );
 }
